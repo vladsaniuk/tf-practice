@@ -26,13 +26,20 @@ module "add_ons" {
 module "node_group" {
   source              = "./modules/node-group"
   cluster_name        = local.cluster_name
-  public_subnets_ids  = module.network.public_subnets_ids
   private_subnets_ids = module.network.private_subnets_ids
   disk_size           = var.disk_size
   instance_types      = var.instance_types
   desired_size        = var.desired_size
   max_size            = var.max_size
   min_size            = var.min_size
+  env                 = var.env
+  tags                = local.tags
+}
+
+module "fargate_profile" {
+  source              = "./modules/fargate-profile"
+  cluster_name        = local.cluster_name
+  private_subnets_ids = module.network.private_subnets_ids
   env                 = var.env
   tags                = local.tags
 }

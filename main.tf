@@ -11,7 +11,7 @@ module "eks" {
   source              = "./modules/eks"
   public_subnets_ids  = module.network.public_subnets_ids
   private_subnets_ids = module.network.private_subnets_ids
-  cluster_name        = "${var.env}-eks-cluster"
+  cluster_name        = local.cluster_name
   env                 = var.env
   tags                = local.tags
 }
@@ -41,6 +41,13 @@ module "fargate_profile" {
   cluster_name        = local.cluster_name
   private_subnets_ids = module.network.private_subnets_ids
   env                 = var.env
+  tags                = local.tags
+}
+
+module "karpenter" {
+  source = "./karpenter"
+  env                 = var.env
+  oidc = module.eks.eks_oidc
   tags                = local.tags
 }
 

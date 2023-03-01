@@ -19,7 +19,7 @@ resource "aws_subnet" "private_subnets" {
   availability_zone = each.key
   cidr_block        = each.value
   vpc_id            = aws_vpc.vpc.id
-  tags              = tomap(merge({ Name = "Private-subnet-${each.key}-${var.env}-env" }, { "kubernetes.io/role/internal-elb" = "1" }, { "kubernetes.io/cluster/${var.cluster_name}" = "shared" }, var.tags))
+  tags              = tomap(merge({ Name = "Private-subnet-${each.key}-${var.env}-env" }, { "kubernetes.io/role/internal-elb" = "1" }, { "kubernetes.io/cluster/${var.cluster_name}" = "shared" }, { "karpenter.sh/discovery" = "${var.cluster_name}" }, var.tags))
 }
 
 # Export subnets IDs as array to reference it going forward

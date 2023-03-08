@@ -51,6 +51,11 @@ module "karpenter" {
   eks_oidc     = module.eks.eks_oidc
   node_group   = module.node_group.node_group
   tags         = local.tags
+
+  depends_on = [
+    module.eks
+  ]
+
 }
 
 locals {

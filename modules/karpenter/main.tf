@@ -29,22 +29,22 @@ resource "aws_iam_role" "karpenter_node_role" {
 
 # Attach node policies
 resource "aws_iam_role_policy_attachment" "worker_node_policy_to_role" {
-  role       = aws_iam_role.karpenter_role.name
+  role       = aws_iam_role.karpenter_node_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
 }
 
 resource "aws_iam_role_policy_attachment" "ecr_policy_to_role" {
-  role       = aws_iam_role.karpenter_role.name
+  role       = aws_iam_role.karpenter_node_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
 resource "aws_iam_role_policy_attachment" "cni_policy_to_role" {
-  role       = aws_iam_role.karpenter_role.name
+  role       = aws_iam_role.karpenter_node_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
 resource "aws_iam_role_policy_attachment" "ssm_policy_to_role" {
-  role       = aws_iam_role.karpenter_role.name
+  role       = aws_iam_role.karpenter_node_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
@@ -52,7 +52,7 @@ resource "aws_iam_role_policy_attachment" "ssm_policy_to_role" {
 resource "aws_iam_instance_profile" "karpenter_node_instance_profile" {
   name = "KarpenterNodeInstanceProfile-${var.cluster_name}"
   role = aws_iam_role.karpenter_node_role.name
-  tags        = var.tags
+  tags = var.tags
 }
 
 # Create Controller role
@@ -64,12 +64,12 @@ resource "aws_iam_role" "karpenter_controller_role" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          "Federated": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${var.eks_oidc.oidc.issuer_url}" # cluster.identity.oidc.issuer
+          "Federated" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${var.eks_oidc.oidc[0].issuer_url}" # cluster.identity.oidc.issuer
         }
         Condition = {
           "StringEquals" : {
-            "${var.eks_oidc.oidc.issuer_url}:aud": "sts.amazonaws.com",
-            "${var.eks_oidc.oidc.issuer_url}:sub": "system:serviceaccount:karpenter:karpenter"
+            "${var.eks_oidc.oidc[0].issuer_url}:aud" : "sts.amazonaws.com",
+            "${var.eks_oidc.oidc[0].issuer_url}:sub" : "system:serviceaccount:karpenter:karpenter"
           }
         }
       }
@@ -88,49 +88,49 @@ resource "aws_iam_policy" "karpenter_controller_policy" {
       {
         Action = [
           "ssm:GetParameter",
-            "ec2:DescribeImages",
-            "ec2:RunInstances",
-            "ec2:DescribeSubnets",
-            "ec2:DescribeSecurityGroups",
-            "ec2:DescribeLaunchTemplates",
-            "ec2:DescribeInstances",
-            "ec2:DescribeInstanceTypes",
-            "ec2:DescribeInstanceTypeOfferings",
-            "ec2:DescribeAvailabilityZones",
-            "ec2:DeleteLaunchTemplate",
-            "ec2:CreateTags",
-            "ec2:CreateLaunchTemplate",
-            "ec2:CreateFleet",
-            "ec2:DescribeSpotPriceHistory",
-            "pricing:GetProducts"
+          "ec2:DescribeImages",
+          "ec2:RunInstances",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeLaunchTemplates",
+          "ec2:DescribeInstances",
+          "ec2:DescribeInstanceTypes",
+          "ec2:DescribeInstanceTypeOfferings",
+          "ec2:DescribeAvailabilityZones",
+          "ec2:DeleteLaunchTemplate",
+          "ec2:CreateTags",
+          "ec2:CreateLaunchTemplate",
+          "ec2:CreateFleet",
+          "ec2:DescribeSpotPriceHistory",
+          "pricing:GetProducts"
         ]
         Effect   = "Allow"
         Resource = "*"
-        Sid = "Karpenter"
+        Sid      = "Karpenter"
       },
       {
         Action = [
-            "ec2:TerminateInstances"
+          "ec2:TerminateInstances"
         ]
-        Effect = "Allow"
+        Effect   = "Allow"
         Resource = "*"
-        Sid = "ConditionalEC2Termination"
+        Sid      = "ConditionalEC2Termination"
       },
       {
         Action = [
-            "iam:PassRole"
+          "iam:PassRole"
         ]
-        Effect = "Allow"
+        Effect   = "Allow"
         Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${aws_iam_role.karpenter_node_role.name}"
-        Sid = "PassNodeIAMRole"
+        Sid      = "PassNodeIAMRole"
       },
       {
         Action = [
-            "eks:DescribeCluster"
+          "eks:DescribeCluster"
         ]
-        Effect = "Allow"
+        Effect   = "Allow"
         Resource = "arn:aws:eks:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.cluster_name}arn:aws:eks:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.cluster_name}arn:aws:eks:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.cluster_name}"
-        Sid = "EKSClusterEndpointLookup"
+        Sid      = "EKSClusterEndpointLookup"
       }
     ]
   })
@@ -141,15 +141,15 @@ resource "aws_iam_policy" "karpenter_controller_policy" {
 }
 
 resource "aws_iam_policy_attachment" "karpenter_controller_policy_to_role" {
-  name = "karpenter-controller-policy-to-role-attachment"
-  roles = aws_iam_role.karpenter_controller_role.name
+  name       = "karpenter-controller-policy-to-role-attachment"
+  roles      = [aws_iam_role.karpenter_controller_role.name]
   policy_arn = aws_iam_policy.karpenter_controller_policy.arn
 }
 
 # Add configuration to EKS aws-auth configmap
 resource "kubernetes_config_map_v1_data" "aws-auth" {
   metadata {
-    name = "aws-auth"
+    name      = "aws-auth"
     namespace = "kube-system"
   }
   data = {
@@ -173,7 +173,7 @@ resource "kubernetes_namespace" "karpenter_namespace" {
 # Install Karpenter with Helm
 resource "helm_release" "karpenter" {
   name       = "karpenter-release"
-  namespace = kubernetes_namespace.karpenter_namespace.metadata.name
+  namespace  = kubernetes_namespace.karpenter_namespace.metadata[0].name
   repository = "oci://public.ecr.aws/karpenter/karpenter"
   chart      = "karpenter"
   version    = "v0.25.0"
@@ -197,7 +197,7 @@ resource "helm_release" "karpenter" {
     name  = "controller.resources.requests.cpu"
     value = "0.25"
   }
-  
+
   set {
     name  = "controller.resources.requests.memory"
     value = "256M"
@@ -231,19 +231,19 @@ resource "helm_release" "karpenter" {
 
 # Add CRD 
 resource "kubernetes_manifest" "sh_provisioners" {
-  manifest = yamldecode(file("./karpenter/sh_provisioners.yaml"))
+  manifest = yamldecode(file("./modules/karpenter/sh_provisioners.yaml"))
 }
 
 # Add CRD
-resource "kubernetes_manifest" "sh_provisioners" {
-  manifest = yamldecode(file("./karpenter/aws_awsnodetemplates.yaml"))
+resource "kubernetes_manifest" "aws_awsnodetemplates" {
+  manifest = yamldecode(file("./modules/karpenter/aws_awsnodetemplates.yaml"))
 }
 
 # Configure provisioner CRD
 resource "kubernetes_manifest" "provisioner_default" {
   manifest = {
     "apiVersion" = "karpenter.sh/v1alpha5"
-    "kind" = "Provisioner"
+    "kind"       = "Provisioner"
     "metadata" = {
       "name" = "default"
     }
@@ -258,21 +258,21 @@ resource "kubernetes_manifest" "provisioner_default" {
       }
       "requirements" = [
         {
-          "key" = "karpenter.k8s.aws/instance-category"
+          "key"      = "karpenter.k8s.aws/instance-category"
           "operator" = "In"
           "values" = [
             "t",
           ]
         },
         {
-          "key" = "karpenter.k8s.aws/instance-generation"
+          "key"      = "karpenter.k8s.aws/instance-generation"
           "operator" = "Gt"
           "values" = [
             "2",
           ]
         },
         {
-          "key" = "karpenter.k8s.aws/instance-size"
+          "key"      = "karpenter.k8s.aws/instance-size"
           "operator" = "In"
           "values" = [
             "small",
@@ -280,7 +280,7 @@ resource "kubernetes_manifest" "provisioner_default" {
           ]
         },
         {
-          "key" = "karpenter.k8s.aws/capacity-type"
+          "key"      = "karpenter.k8s.aws/capacity-type"
           "operator" = "In"
           "values" = [
             "spot",
@@ -294,7 +294,7 @@ resource "kubernetes_manifest" "provisioner_default" {
 resource "kubernetes_manifest" "awsnodetemplate_default" {
   manifest = {
     "apiVersion" = "karpenter.k8s.aws/v1alpha1"
-    "kind" = "AWSNodeTemplate"
+    "kind"       = "AWSNodeTemplate"
     "metadata" = {
       "name" = "default"
     }

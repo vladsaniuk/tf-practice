@@ -45,12 +45,12 @@ module "fargate_profile" {
 }
 
 module "karpenter" {
-  source = "./karpenter"
-  cluster_name        = local.cluster_name
-  env                 = var.env
-  oidc = module.eks.eks_oidc
-  node_group = module.node_group.node_group
-  tags                = local.tags
+  source       = "./modules/karpenter"
+  cluster_name = local.cluster_name
+  env          = var.env
+  eks_oidc     = module.eks.eks_oidc
+  node_group   = module.node_group.node_group
+  tags         = local.tags
 }
 
 locals {

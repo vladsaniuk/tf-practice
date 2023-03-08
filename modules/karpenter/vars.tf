@@ -10,6 +10,10 @@ variable "tags" {
   description = "Map of tags from root module"
 }
 
-variable "private_subnets_ids" {
-  description = "Private subnets IDs from Network module"
+variable "eks_oidc" {
+  description = "EKS OIDC provider"
+}
+
+variable "node_group" {
+  description = "EKS Node group"
 }

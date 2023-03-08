@@ -76,8 +76,8 @@ resource "aws_iam_role" "eks_node_oidc" {
 resource "aws_eks_identity_provider_config" "eks_oidc" {
   cluster_name = aws_eks_cluster.eks.name
   oidc {
-    client_id  = "${substr(aws_eks_cluster.eks.identity.0.oidc.0.issuer, -32, -1)}"
+    client_id                     = substr(aws_eks_cluster.eks.identity.0.oidc.0.issuer, -32, -1)
     identity_provider_config_name = "${aws_eks_cluster.eks.name}-OIDC"
-    issuer_url = "https://${aws_iam_openid_connect_provider.iam_eks_oidc.url}"
+    issuer_url                    = "https://${aws_iam_openid_connect_provider.iam_eks_oidc.url}"
   }
 }

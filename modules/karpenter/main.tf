@@ -161,6 +161,7 @@ resource "kubernetes_config_map_v1_data" "aws-auth" {
   username: system:node:{{EC2PrivateDNSName}}
 YAML
   }
+  force = true
 }
 
 # Create namespace for Karpenter
@@ -174,7 +175,7 @@ resource "kubernetes_namespace" "karpenter_namespace" {
 resource "helm_release" "karpenter" {
   name       = "karpenter-release"
   namespace  = kubernetes_namespace.karpenter_namespace.metadata[0].name
-  repository = "oci://public.ecr.aws/karpenter/karpenter"
+  repository = "oci://public.ecr.aws/karpenter"
   chart      = "karpenter"
   version    = "v0.25.0"
 
@@ -239,72 +240,78 @@ resource "kubernetes_manifest" "aws_awsnodetemplates" {
   manifest = yamldecode(file("./modules/karpenter/aws_awsnodetemplates.yaml"))
 }
 
-# Configure provisioner CRD
-resource "kubernetes_manifest" "provisioner_default" {
-  manifest = {
-    "apiVersion" = "karpenter.sh/v1alpha5"
-    "kind"       = "Provisioner"
-    "metadata" = {
-      "name" = "default"
-    }
-    "spec" = {
-      "limits" = {
-        "resources" = {
-          "cpu" = 2
-        }
-      }
-      "providerRef" = {
-        "name" = "default"
-      }
-      "requirements" = [
-        {
-          "key"      = "karpenter.k8s.aws/instance-category"
-          "operator" = "In"
-          "values" = [
-            "t",
-          ]
-        },
-        {
-          "key"      = "karpenter.k8s.aws/instance-generation"
-          "operator" = "Gt"
-          "values" = [
-            "2",
-          ]
-        },
-        {
-          "key"      = "karpenter.k8s.aws/instance-size"
-          "operator" = "In"
-          "values" = [
-            "small",
-            "medium",
-          ]
-        },
-        {
-          "key"      = "karpenter.k8s.aws/capacity-type"
-          "operator" = "In"
-          "values" = [
-            "spot",
-          ]
-        },
-      ]
-    }
-  }
-}
+# # Configure provisioner CRD
+# resource "kubernetes_manifest" "provisioner_default" {
+#   manifest = {
+#     "apiVersion" = "karpenter.sh/v1alpha5"
+#     "kind"       = "Provisioner"
+#     "metadata" = {
+#       "name" = "default"
+#     }
+#     "spec" = {
+#       "limits" = {
+#         "resources" = {
+#           "cpu" = 2
+#         }
+#       }
+#       "providerRef" = {
+#         "name" = "default"
+#       }
+#       "requirements" = [
+#         {
+#           "key"      = "karpenter.k8s.aws/instance-category"
+#           "operator" = "In"
+#           "values" = [
+#             "t",
+#           ]
+#         },
+#         {
+#           "key"      = "karpenter.k8s.aws/instance-generation"
+#           "operator" = "Gt"
+#           "values" = [
+#             "2",
+#           ]
+#         },
+#         {
+#           "key"      = "karpenter.k8s.aws/instance-size"
+#           "operator" = "In"
+#           "values" = [
+#             "small",
+#             "medium",
+#           ]
+#         },
+#         {
+#           "key"      = "karpenter.k8s.aws/capacity-type"
+#           "operator" = "In"
+#           "values" = [
+#             "spot",
+#           ]
+#         },
+#       ]
+#     }
+#   }
+#   depends_on = [
+#     kubernetes_manifest.sh_provisioners
+#   ]
+# }
 
-resource "kubernetes_manifest" "awsnodetemplate_default" {
-  manifest = {
-    "apiVersion" = "karpenter.k8s.aws/v1alpha1"
-    "kind"       = "AWSNodeTemplate"
-    "metadata" = {
-      "name" = "default"
-    }
-    "spec" = {
-      "securityGroupSelector" = {
-        "karpenter.sh/discovery" = "${var.cluster_name}"
-      }
-      "subnetSelector" = {
-        "karpenter.sh/discovery" = "${var.cluster_name}"
-      }
-    }
-  }
-}
+# resource "kubernetes_manifest" "awsnodetemplate_default" {
+#   manifest = {
+#     "apiVersion" = "karpenter.k8s.aws/v1alpha1"
+#     "kind"       = "AWSNodeTemplate"
+#     "metadata" = {
+#       "name" = "default"
+#     }
+#     "spec" = {
+#       "securityGroupSelector" = {
+#         "karpenter.sh/discovery" = "${var.cluster_name}"
+#       }
+#       "subnetSelector" = {
+#         "karpenter.sh/discovery" = "${var.cluster_name}"
+#       }
+#     }
+#   }
+#   depends_on = [
+#     kubernetes_manifest.aws_awsnodetemplates
+#   ]
+# }

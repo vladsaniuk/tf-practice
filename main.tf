@@ -16,13 +16,6 @@ module "eks" {
   tags                = local.tags
 }
 
-module "add_ons" {
-  source       = "./modules/add-ons"
-  cluster_name = local.cluster_name
-  env          = var.env
-  tags         = local.tags
-}
-
 module "node_group" {
   source              = "./modules/node-group"
   cluster_name        = local.cluster_name
@@ -34,6 +27,18 @@ module "node_group" {
   min_size            = var.min_size
   env                 = var.env
   tags                = local.tags
+}
+
+module "add_ons" {
+  source       = "./modules/add-ons"
+  cluster_name = local.cluster_name
+  env          = var.env
+  tags         = local.tags
+
+  depends_on = [
+    module.node_group
+  ]
+
 }
 
 module "fargate_profile" {

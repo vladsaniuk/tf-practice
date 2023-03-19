@@ -20,3 +20,13 @@ To execute specific module use:
 To apply it:
 
 `terraform apply "dev.tfplan"`
+
+Get kubeconfig:
+`aws eks update-kubeconfig --region us-east-1 --name dev-eks-cluster`
+
+To destroy infra, make plan:
+`terraform plan -destroy -var-file dev.tfvars -target="module.network" -out=dev-network-destroy.tfplan`
+
+And apply:
+`terraform apply "dev-network-destroy.tfplan"`
+

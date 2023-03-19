@@ -24,8 +24,8 @@ resource "aws_subnet" "private_subnets" {
 
 # Export subnets IDs as array to reference it going forward
 locals {
-  public_subnets_ids  = [for subnet in aws_subnet.private_subnets : subnet.id]
-  private_subnets_ids = [for subnet in aws_subnet.public_subnets : subnet.id]
+  private_subnets_ids  = [for subnet in aws_subnet.private_subnets : subnet.id]
+  public_subnets_ids = [for subnet in aws_subnet.public_subnets : subnet.id]
 }
 
 resource "aws_internet_gateway" "igw" {

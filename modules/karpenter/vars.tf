@@ -17,3 +17,7 @@ variable "eks_oidc" {
 variable "node_group" {
   description = "EKS Node group"
 }
+
+variable "cluster_users" {
+  description = "map of user ARNs and names"
+}

@@ -64,12 +64,12 @@ resource "aws_iam_role" "karpenter_controller_role" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          "Federated" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${var.eks_oidc.oidc[0].issuer_url}" # cluster.identity.oidc.issuer
+          "Federated" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${replace(var.eks_oidc.oidc[0].issuer_url, "https://", "")}" # cluster.identity.oidc.issuer 
         }
         Condition = {
           "StringEquals" : {
-            "${var.eks_oidc.oidc[0].issuer_url}:aud" : "sts.amazonaws.com",
-            "${var.eks_oidc.oidc[0].issuer_url}:sub" : "system:serviceaccount:karpenter:karpenter"
+            "${replace(var.eks_oidc.oidc[0].issuer_url, "https://", "")}:aud" : "sts.amazonaws.com",
+            "${replace(var.eks_oidc.oidc[0].issuer_url, "https://", "")}:sub" : "system:serviceaccount:karpenter:karpenter"
           }
         }
       }
@@ -129,7 +129,7 @@ resource "aws_iam_policy" "karpenter_controller_policy" {
           "eks:DescribeCluster"
         ]
         Effect   = "Allow"
-        Resource = "arn:aws:eks:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.cluster_name}arn:aws:eks:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.cluster_name}arn:aws:eks:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.cluster_name}"
+        Resource = "arn:aws:eks:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.cluster_name}"
         Sid      = "EKSClusterEndpointLookup"
       }
     ]
@@ -146,8 +146,13 @@ resource "aws_iam_policy_attachment" "karpenter_controller_policy_to_role" {
   policy_arn = aws_iam_policy.karpenter_controller_policy.arn
 }
 
+# FIX LATER
 # Add configuration to EKS aws-auth configmap
 resource "kubernetes_config_map_v1_data" "aws-auth" {
+  for_each = { # for_each with list of objects
+    for index, user in var.cluster_users:
+    user.ARN => user
+  }
   metadata {
     name      = "aws-auth"
     namespace = "kube-system"
@@ -159,6 +164,17 @@ resource "kubernetes_config_map_v1_data" "aws-auth" {
   - system:nodes
   rolearn: arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${aws_iam_role.karpenter_node_role.name}
   username: system:node:{{EC2PrivateDNSName}}
+- groups:
+  - system:bootstrappers
+  - system:nodes
+  rolearn: arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/EKS-node-role-dev-env
+  username: system:node:{{EC2PrivateDNSName}}
+YAML
+    mapUsers = <<YAML
+- groups:
+  - system:masters
+  userarn: ${each.value.ARN}
+  username: ${each.value.username}
 YAML
   }
   force = true
@@ -173,11 +189,15 @@ resource "kubernetes_namespace" "karpenter_namespace" {
 
 # Install Karpenter with Helm
 resource "helm_release" "karpenter" {
-  name       = "karpenter-release"
+  name       = "karpenter"
   namespace  = kubernetes_namespace.karpenter_namespace.metadata[0].name
   repository = "oci://public.ecr.aws/karpenter"
   chart      = "karpenter"
   version    = "v0.25.0"
+
+  values = [
+    "${file("./modules/karpenter/karpenter_node_affinity_values.yaml")}"
+  ]
 
   set {
     name  = "settings.aws.defaultInstanceProfile"
@@ -190,7 +210,7 @@ resource "helm_release" "karpenter" {
   }
 
   set {
-    name  = "serviceAccount.annotations.\"eks\\.amazonaws\\.com/role-arn\""
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = aws_iam_role.karpenter_controller_role.arn
   }
 
@@ -215,103 +235,90 @@ resource "helm_release" "karpenter" {
   }
 
   set {
-    name  = "affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms.matchExpressions.key"
-    value = "eks.amazonaws.com/nodegroup"
-  }
-
-  set {
-    name  = "affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms.matchExpressions.operator"
-    value = "In"
-  }
-
-  set {
-    name  = "affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms.matchExpressions.values"
-    value = var.node_group.node_group_name
+    name = ".template.spec.containers.readinessProbe.initialDelaySeconds"
+    value = "30"
   }
 }
 
 # Add CRD 
 resource "kubernetes_manifest" "sh_provisioners" {
   manifest = yamldecode(file("./modules/karpenter/sh_provisioners.yaml"))
+  depends_on = [
+    helm_release.karpenter
+  ]
 }
 
 # Add CRD
 resource "kubernetes_manifest" "aws_awsnodetemplates" {
   manifest = yamldecode(file("./modules/karpenter/aws_awsnodetemplates.yaml"))
+    depends_on = [
+    helm_release.karpenter
+  ]
 }
 
-# # Configure provisioner CRD
-# resource "kubernetes_manifest" "provisioner_default" {
-#   manifest = {
-#     "apiVersion" = "karpenter.sh/v1alpha5"
-#     "kind"       = "Provisioner"
-#     "metadata" = {
-#       "name" = "default"
-#     }
-#     "spec" = {
-#       "limits" = {
-#         "resources" = {
-#           "cpu" = 2
-#         }
-#       }
-#       "providerRef" = {
-#         "name" = "default"
-#       }
-#       "requirements" = [
-#         {
-#           "key"      = "karpenter.k8s.aws/instance-category"
-#           "operator" = "In"
-#           "values" = [
-#             "t",
-#           ]
-#         },
-#         {
-#           "key"      = "karpenter.k8s.aws/instance-generation"
-#           "operator" = "Gt"
-#           "values" = [
-#             "2",
-#           ]
-#         },
-#         {
-#           "key"      = "karpenter.k8s.aws/instance-size"
-#           "operator" = "In"
-#           "values" = [
-#             "small",
-#             "medium",
-#           ]
-#         },
-#         {
-#           "key"      = "karpenter.k8s.aws/capacity-type"
-#           "operator" = "In"
-#           "values" = [
-#             "spot",
-#           ]
-#         },
-#       ]
-#     }
-#   }
-#   depends_on = [
-#     kubernetes_manifest.sh_provisioners
-#   ]
-# }
+# Configure provisioner CRD
+resource "kubernetes_manifest" "provisioner_default" {
+  computed_fields = ["spec.requirements"]
+  manifest = {
+    "apiVersion" = "karpenter.sh/v1alpha5"
+    "kind"       = "Provisioner"
+    "metadata" = {
+      "name" = "default"
+    }
+    "spec" = {
+      "limits" = {
+        "resources" = {
+          "cpu" = 2
+        }
+      }
+      "providerRef" = {
+        "name" = "default"
+      }
+      "requirements" = [
+        {
+          "key"      = "karpenter.k8s.aws/instance-category"
+          "operator" = "In"
+          "values" = [
+            "t"
+          ]
+        },
+        {
+          "key"      = "karpenter.k8s.aws/instance-generation"
+          "operator" = "Gt"
+          "values" = [
+            "2"
+          ]
+        },
+        {
+          "key"      = "karpenter.k8s.aws/instance-size"
+          "operator" = "In"
+          "values" = [
+            "small",
+            "medium"
+          ]
+        },
+      ]
+    }
+  }
+}
 
-# resource "kubernetes_manifest" "awsnodetemplate_default" {
-#   manifest = {
-#     "apiVersion" = "karpenter.k8s.aws/v1alpha1"
-#     "kind"       = "AWSNodeTemplate"
-#     "metadata" = {
-#       "name" = "default"
-#     }
-#     "spec" = {
-#       "securityGroupSelector" = {
-#         "karpenter.sh/discovery" = "${var.cluster_name}"
-#       }
-#       "subnetSelector" = {
-#         "karpenter.sh/discovery" = "${var.cluster_name}"
-#       }
-#     }
-#   }
-#   depends_on = [
-#     kubernetes_manifest.aws_awsnodetemplates
-#   ]
-# }
+resource "kubernetes_manifest" "awsnodetemplate_default" {
+  manifest = {
+    "apiVersion" = "karpenter.k8s.aws/v1alpha1"
+    "kind"       = "AWSNodeTemplate"
+    "metadata" = {
+      "name" = "default"
+    }
+    "spec" = {
+      "securityGroupSelector" = {
+        "karpenter.sh/discovery" = "${var.cluster_name}"
+      }
+      "subnetSelector" = {
+        "karpenter.sh/discovery" = "${var.cluster_name}"
+      }
+    }
+  }
+  depends_on = [
+    kubernetes_manifest.aws_awsnodetemplates
+  ]
+}

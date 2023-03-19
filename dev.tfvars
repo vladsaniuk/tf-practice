@@ -14,6 +14,10 @@ private_subnets = {
   us-east-1d = "10.0.224.0/19"
 }
 
+cluster_users = [
+  {ARN = "arn:aws:iam::250705831128:root", username = "admin"}
+]
+
 disk_size      = 40
 instance_types = ["t3.medium"]
 desired_size   = 1

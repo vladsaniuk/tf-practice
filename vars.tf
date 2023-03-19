@@ -21,6 +21,7 @@ variable "env" {
 
 variable "disk_size" {
   description = "Node disk size"
+  default = 40
 }
 
 variable "instance_types" {
@@ -42,4 +43,15 @@ variable "max_size" {
 variable "min_size" {
   description = "Node group min size"
   default     = 1
+}
+
+variable "cluster_users" {
+  description = "map of user ARNs and names"
+  default = [
+    {ARN = "", username = ""}
+  ]
+  type = list(object({
+    ARN = string
+    username = string
+  }))
 }

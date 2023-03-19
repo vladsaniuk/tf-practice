@@ -9,24 +9,24 @@ It's logically structured into following modules:
 5) Fargate profile (serverless)
 6) Karpenter (auto-scaling for Node group)
 
-To execute complete tf code use, but note that Karpenter module is dependent on EKS module (it use data resource to query cluster details), so it will eventually through you and error, but it can be used for testing / troubleshooting your syntax:
+To execute complete tf code use this snippet, but note that Karpenter module is dependent on EKS module (it use data resource to query cluster details), so it will eventually throw you and error, but it can be used for testing / troubleshooting your syntax:
 
 `terraform plan -var-file dev.tfvars`
 
 To execute specific module use:
 
-`terraform plan -var-file dev.tfvars -target="module.network" -out=dev.tfplan`
+`terraform plan -var-file dev.tfvars -target="module.network" -out=dev_network.tfplan`
 
 To apply it:
 
-`terraform apply "dev.tfplan"`
+`terraform apply "dev_network.tfplan"`
 
 Get kubeconfig:
-`aws eks update-kubeconfig --region us-east-1 --name dev-eks-cluster`
+`aws eks update-kubeconfig --region us-east-1 --name dev_eks-cluster`
 
 To destroy infra, make plan:
-`terraform plan -destroy -var-file dev.tfvars -target="module.network" -out=dev-network-destroy.tfplan`
+`terraform plan -destroy -var-file dev.tfvars -target="module.network" -out=dev_network-destroy.tfplan`
 
 And apply:
-`terraform apply "dev-network-destroy.tfplan"`
+`terraform apply "dev_network-destroy.tfplan"`
 

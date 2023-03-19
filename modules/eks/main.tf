@@ -81,3 +81,9 @@ resource "aws_eks_identity_provider_config" "eks_oidc" {
     issuer_url                    = "https://${aws_iam_openid_connect_provider.iam_eks_oidc.url}"
   }
 }
+
+resource "aws_ec2_tag" "karpenter" {
+  resource_id = aws_eks_cluster.eks.vpc_config[0].cluster_security_group_id
+  key         = "karpenter.sh/discovery"
+  value       = var.cluster_name
+}

@@ -25,6 +25,7 @@ module "node_group" {
   desired_size        = var.desired_size
   max_size            = var.max_size
   min_size            = var.min_size
+  cluster_users = var.cluster_users
   env                 = var.env
   tags                = local.tags
 }
@@ -55,6 +56,7 @@ module "karpenter" {
   env          = var.env
   eks_oidc     = module.eks.eks_oidc
   node_group   = module.node_group.node_group
+  cluster_users = var.cluster_users
   tags         = local.tags
 
   depends_on = [

@@ -33,3 +33,7 @@ variable "max_size" {
 variable "min_size" {
   description = "Node group min size"
 }
+
+variable "cluster_users" {
+  description = "map of user ARNs and names"
+}

@@ -37,7 +37,7 @@ pipeline {
         stage('Plan') {
             steps {
                 script {
-                    if (${params.TARGET} != "") {
+                    if (params.TARGET != "") {
                         sh """
                         terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_backend.tfplan
                         """
@@ -58,7 +58,7 @@ pipeline {
             }
             steps {
                 script {
-                    if (${params.TARGET} != "") {
+                    if (params.TARGET != "") {
                         sh """
                         terraform plan -destroy -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_backend.tfplan
                         """

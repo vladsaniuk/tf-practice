@@ -4,7 +4,7 @@ pipeline {
 
     parameters {
       string(name: "ENV", defaultValue: "dev", description: "Env name")
-      choice(name: "ACTION", defaultValue: "plan", choices: ['plan', 'apply', 'destroy'], description: "tf action: plan/apply/destroy")
+      choice(name: "ACTION", choices: ['plan', 'apply', 'destroy'], description: "tf action: plan/apply/destroy")
       string(name: "TARGET", defaultValue: "", description: "tf target")
       string(name: "REGION", defaultValue: "us-east-1", description: "AWS region")
     }

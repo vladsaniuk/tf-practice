@@ -39,11 +39,11 @@ pipeline {
                 script {
                     if (params.TARGET != "") {
                         sh """
-                        terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_backend.tfplan
+                        terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_${params.TARGET}.tfplan
                         """
                     } else {
                         sh """
-                        terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -out=${params.ENV}_backend.tfplan
+                        terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -out=${params.ENV}_${params.TARGET}.tfplan
                         """
                     }
                 }
@@ -60,11 +60,11 @@ pipeline {
                 script {
                     if (params.TARGET != "") {
                         sh """
-                        terraform plan -destroy -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_backend.tfplan
+                        terraform plan -destroy -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_${params.TARGET}.tfplan
                         """
                     } else {
                         sh """
-                        terraform plan -destroy -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -out=${params.ENV}_backend.tfplan
+                        terraform plan -destroy -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -out=${params.ENV}_${params.TARGET}.tfplan
                         """
                     }
                 }
@@ -74,7 +74,7 @@ pipeline {
         stage('Apply') {
             when {
                 expression {
-                    params.ACTION ==~ /(apply|destroy)/
+                    params.ACTION == "apply"
                 }
             }
             input {
@@ -86,7 +86,7 @@ pipeline {
             }
             steps {
                 sh """
-                terraform apply "${params.ENV}_backend.tfplan"
+                terraform apply "${params.ENV}_${params.TARGET}.tfplan"
                 """
             }
         }

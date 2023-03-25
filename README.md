@@ -9,7 +9,7 @@ It's logically structured into following modules:
 5) Fargate profile (serverless)
 6) Karpenter (auto-scaling for Node group)
 
-It is assumed, that vars cluster_name and env will be passed from the pipeline.
+It is assumed, that vars cluster_name, region and env will be passed from the pipeline.
 
 Init with backend config file:
 `terraform init -backend-config=backend-dev.hcl`

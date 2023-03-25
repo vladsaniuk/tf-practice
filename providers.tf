@@ -11,8 +11,7 @@ data "aws_eks_cluster_auth" "eks" {
 }
 
 provider "aws" {
-  region  = "us-east-1"
-  profile = "terraform"
+  region  = var.region
 }
 
 provider "kubernetes" {

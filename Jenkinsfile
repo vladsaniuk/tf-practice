@@ -6,6 +6,7 @@ pipeline {
       string(name: "ENV", defaultValue: "dev", description: "Env name")
       string(name: "ACTION", defaultValue: "plan", description: "tf action: plan/apply/destroy")
       string(name: "TARGET", defaultValue: "", description: "tf target")
+      string(name: "REGION", defaultValue: "us-east-1", description: "AWS region")
     }
 
     options {
@@ -17,6 +18,7 @@ pipeline {
             daysToKeepStr:  ("${BRANCH_NAME}" == 'master' && "${params.ENV}" == 'prod') ? '30' : '5',
             numToKeepStr:  ("${BRANCH_NAME}" == 'master' && "${params.ENV}" == 'prod') ? '30' : '10',
             ))
+        ansiColor('xterm')
     }
 
     environment {
@@ -37,11 +39,11 @@ pipeline {
                 script {
                     if (${params.TARGET} != "") {
                         sh """
-                        terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_backend.tfplan
+                        terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_backend.tfplan
                         """
                     } else {
                         sh """
-                        terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="cluster_name=${params.ENV}-eks-cluster" -out=${params.ENV}_backend.tfplan
+                        terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -out=${params.ENV}_backend.tfplan
                         """
                     }
                 }
@@ -58,11 +60,11 @@ pipeline {
                 script {
                     if (${params.TARGET} != "") {
                         sh """
-                        terraform plan -destroy -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_backend.tfplan
+                        terraform plan -destroy -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_backend.tfplan
                         """
                     } else {
                         sh """
-                        terraform plan -destroy -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="cluster_name=${params.ENV}-eks-cluster" -out=${params.ENV}_backend.tfplan
+                        terraform plan -destroy -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -out=${params.ENV}_backend.tfplan
                         """
                     }
                 }
@@ -88,7 +90,6 @@ pipeline {
                 """
             }
         }
-
         
     }
 

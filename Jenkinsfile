@@ -4,7 +4,7 @@ pipeline {
 
     parameters {
       string(name: "ENV", defaultValue: "dev", description: "Env name")
-      string(name: "ACTION", defaultValue: "plan", description: "tf action: plan/apply/destroy")
+      choice(name: "ACTION", defaultValue: "plan", choices: ['plan', 'apply', 'destroy'], description: "tf action: plan/apply/destroy")
       string(name: "TARGET", defaultValue: "", description: "tf target")
       string(name: "REGION", defaultValue: "us-east-1", description: "AWS region")
     }
@@ -75,7 +75,7 @@ pipeline {
             when {
                 beforeInput true
                 expression {
-                    params.ACTION == ~ /("apply"|"destroy")/
+                    params.ACTION ==~ /("apply"|"destroy")/
                 }
             }
             input {

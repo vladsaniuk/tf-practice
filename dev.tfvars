@@ -1,5 +1,3 @@
-env = "dev"
-
 public_subnets = {
   us-east-1a = "10.0.0.0/19"
   us-east-1b = "10.0.32.0/19"

@@ -19,6 +19,10 @@ variable "env" {
   default     = "dev"
 }
 
+variable "cluster_name" {
+  description = "EKS cluster name"
+}
+
 variable "disk_size" {
   description = "Node disk size"
   default = 40

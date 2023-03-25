@@ -9,6 +9,11 @@ It's logically structured into following modules:
 5) Fargate profile (serverless)
 6) Karpenter (auto-scaling for Node group)
 
+It is assumed, that vars cluster_name and env will be passed from the pipeline.
+
+Init with backend config file:
+`terraform init -backend-config=backend-dev.hcl`
+
 To execute complete tf code use this snippet, but note that Karpenter module is dependent on EKS module (it use data resource to query cluster details), so it will eventually throw you and error, but it can be used for testing / troubleshooting your syntax:
 
 `terraform plan -var-file dev.tfvars`
@@ -30,3 +35,4 @@ To destroy infra, make plan:
 And apply:
 `terraform apply "dev_network-destroy.tfplan"`
 
+Nginx is a deployment to test Karpenter auto-scaling.

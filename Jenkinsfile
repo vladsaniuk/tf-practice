@@ -21,17 +21,21 @@ pipeline {
     }
     stages {
         stage('Init') {
-            sh "terraform init -backend-config=backend-${params.ENV}.hcl"
+            steps {
+                sh "terraform init -backend-config=backend-${params.ENV}.hcl"
+            }
         }
         stage('Plan') {
-            if (${params.TARGET} != "") {
-                sh """
-                terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_backend.tfplan
-                """
-            } else {
-                sh """
-                terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="cluster_name=${params.ENV}-eks-cluster" -out=${params.ENV}_backend.tfplan
-                """
+            steps {
+                if (${params.TARGET} != "") {
+                    sh """
+                    terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_backend.tfplan
+                    """
+                } else {
+                    sh """
+                    terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="cluster_name=${params.ENV}-eks-cluster" -out=${params.ENV}_backend.tfplan
+                    """
+                }
             }
         }
 

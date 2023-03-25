@@ -74,7 +74,7 @@ pipeline {
         stage('Apply') {
             when {
                 expression {
-                    params.ACTION == "apply"
+                    params.ACTION == 'apply'
                 }
             }
             input {

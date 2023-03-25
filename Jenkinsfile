@@ -33,5 +33,56 @@ pipeline {
                 """
             }
         }
+
+        stage('Destroy') {
+            when {
+                expression {
+                    params.ACTION == 'destroy'
+                }
+            }
+            steps {
+                if ${params.TARGET} != "" {
+                    sh """
+                    terraform plan -destroy -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_backend.tfplan
+                    """
+                } else {
+                    sh """
+                    terraform plan -destroy -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="cluster_name=${params.ENV}-eks-cluster" -out=${params.ENV}_backend.tfplan
+                    """
+                }
+            }
+        }
+
+        stage('Apply') {
+            when {
+                expression {
+                    params.ACTION == ('apply' || 'destroy')
+                }
+            }
+            input {
+                message "Apply plan?"
+                ok "Done"
+                parameters {
+                choice(name: "APPLY", choices: ['Proceed', 'Abort'], description: "Proceed and apply tf plan, or abort")
+                }
+            }
+            steps {
+                sh """
+                terraform apply "${params.ENV}_backend.tfplan"
+                """
+            }
+        }
+
+        post {
+        // Clean after build
+            always {
+                cleanWs(cleanWhenNotBuilt: false,
+                        deleteDirs: true,
+                        cleanWhenAborted: true,
+                        cleanWhenFailure: true,
+                        cleanWhenSuccess: true,
+                        cleanWhenUnstable: true)
+            }
+        }
     }
 }

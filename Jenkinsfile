@@ -8,7 +8,7 @@ pipeline {
     options {
         timeout(time: 30, unit: 'MINUTES')
         timestamps()
-        if BRANCH_NAME == 'master' && params.ENV == 'prod' {
+        if (BRANCH_NAME == 'master' && params.ENV == 'prod') {
             buildDiscarder(logRotator(artifactDaysToKeepStr: '30', artifactNumToKeepStr: '10', daysToKeepStr: '30', numToKeepStr: '30'))
         } else {
             buildDiscarder(logRotator(artifactDaysToKeepStr: '5', artifactNumToKeepStr: '2', daysToKeepStr: '5', numToKeepStr: '10'))
@@ -23,7 +23,7 @@ pipeline {
             sh "terraform init -backend-config=backend-${params.ENV}.hcl"
         }
         stage('Plan') {
-            if ${params.TARGET} != "" {
+            if (${params.TARGET} != "") {
                 sh """
                 terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_backend.tfplan
                 """
@@ -41,7 +41,7 @@ pipeline {
                 }
             }
             steps {
-                if ${params.TARGET} != "" {
+                if (${params.TARGET} != "") {
                     sh """
                     terraform plan -destroy -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_backend.tfplan
                     """

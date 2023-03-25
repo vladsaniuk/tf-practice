@@ -1,5 +1,5 @@
 pipeline {
-    
+
     agent any
 
     parameters {
@@ -89,16 +89,18 @@ pipeline {
             }
         }
 
-        post {
+        
+    }
+
+    post {
         // Clean after build
-            always {
-                cleanWs(cleanWhenNotBuilt: false,
-                        deleteDirs: true,
-                        cleanWhenAborted: true,
-                        cleanWhenFailure: true,
-                        cleanWhenSuccess: true,
-                        cleanWhenUnstable: true)
-            }
+        always {
+            cleanWs(cleanWhenNotBuilt: false,
+                    deleteDirs: true,
+                    cleanWhenAborted: true,
+                    cleanWhenFailure: true,
+                    cleanWhenSuccess: true,
+                    cleanWhenUnstable: true)
         }
     }
 }

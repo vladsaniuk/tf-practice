@@ -1,12 +1,12 @@
+/* groovylint-disable CompileStatic, DuplicateStringLiteral, LineLength, NestedBlockDepth */
 pipeline {
-
     agent any
 
     parameters {
-      string(name: "ENV", defaultValue: "dev", description: "Env name")
-      choice(name: "ACTION", choices: ['plan', 'apply', 'destroy'], description: "tf action: plan/apply/destroy")
-      string(name: "TARGET", defaultValue: "", description: "tf target")
-      string(name: "REGION", defaultValue: "us-east-1", description: "AWS region")
+        string(name: 'ENV', defaultValue: 'dev', description: 'Env name')
+        choice(name: 'ACTION', choices: ['plan', 'apply', 'destroy'], description: 'tf action: plan/apply/destroy')
+        string(name: 'TARGET', defaultValue: '', description: 'tf target')
+        string(name: 'REGION', defaultValue: 'us-east-1', description: 'AWS region')
     }
 
     options {
@@ -27,7 +27,6 @@ pipeline {
     }
 
     stages {
-
         stage('Init') {
             steps {
                 sh "terraform init -backend-config=backend-${params.ENV}.hcl"
@@ -37,7 +36,7 @@ pipeline {
         stage('Plan') {
             steps {
                 script {
-                    if (params.TARGET != "") {
+                    if (params.TARGET != '') {
                         sh """
                         terraform plan -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_${params.TARGET}.tfplan
                         """
@@ -53,12 +52,12 @@ pipeline {
         stage('Destroy') {
             when {
                 expression {
-                    params.ACTION == "destroy"
+                    params.ACTION == 'destroy'
                 }
             }
             steps {
                 script {
-                    if (params.TARGET != "") {
+                    if (params.TARGET != '') {
                         sh """
                         terraform plan -destroy -var-file ${params.ENV}.tfvars -var="env=${params.ENV}" -var="region=${params.REGION}" -var="cluster_name=${params.ENV}-eks-cluster" -target="${params.TARGET}" -out=${params.ENV}_${params.TARGET}.tfplan
                         """
@@ -79,10 +78,10 @@ pipeline {
                 }
             }
             input {
-                message "Apply plan?"
-                ok "Yes"
+                message 'Apply plan?'
+                ok 'Yes'
                 parameters {
-                choice(name: "APPLY", choices: ['Proceed', 'Abort'], description: "Proceed and apply tf plan, or abort")
+                    choice(name: 'APPLY', choices: ['Proceed', 'Abort'], description: 'Proceed and apply tf plan, or abort')
                 }
             }
             steps {
@@ -91,7 +90,6 @@ pipeline {
                 """
             }
         }
-        
     }
 
     post {

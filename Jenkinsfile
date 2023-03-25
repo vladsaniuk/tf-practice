@@ -73,8 +73,9 @@ pipeline {
 
         stage('Apply') {
             when {
+                beforeInput true
                 expression {
-                    params.ACTION == 'apply'
+                    params.ACTION == ~ /(apply|destroy)/
                 }
             }
             input {

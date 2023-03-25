@@ -75,7 +75,7 @@ pipeline {
             when {
                 beforeInput true
                 expression {
-                    params.ACTION ==~ /("apply"|"destroy")/
+                    params.ACTION ==~ /(apply|destroy)/
                 }
             }
             input {

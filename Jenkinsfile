@@ -53,7 +53,7 @@ pipeline {
         stage('Destroy') {
             when {
                 expression {
-                    params.ACTION == 'destroy'
+                    params.ACTION == "destroy"
                 }
             }
             steps {
@@ -75,7 +75,7 @@ pipeline {
             when {
                 beforeInput true
                 expression {
-                    params.ACTION == ~ /(apply|destroy)/
+                    params.ACTION == ~ /("apply"|"destroy")/
                 }
             }
             input {

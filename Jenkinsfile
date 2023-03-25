@@ -8,11 +8,12 @@ pipeline {
     options {
         timeout(time: 30, unit: 'MINUTES')
         timestamps()
-        if (BRANCH_NAME == 'master' && params.ENV == 'prod') {
-            buildDiscarder(logRotator(artifactDaysToKeepStr: '30', artifactNumToKeepStr: '10', daysToKeepStr: '30', numToKeepStr: '30'))
-        } else {
-            buildDiscarder(logRotator(artifactDaysToKeepStr: '5', artifactNumToKeepStr: '2', daysToKeepStr: '5', numToKeepStr: '10'))
-        }
+        buildDiscarder(logRotator(
+            artifactDaysToKeepStr: ("${BRANCH_NAME}" == 'master' && "${params.ENV}" == 'prod') ? '30' : '5',
+            artifactNumToKeepStr: ("${BRANCH_NAME}" == 'master' && "${params.ENV}" == 'prod') ? '10' : '2',
+            daysToKeepStr:  ("${BRANCH_NAME}" == 'master' && "${params.ENV}" == 'prod') ? '30' : '5',
+            numToKeepStr:  ("${BRANCH_NAME}" == 'master' && "${params.ENV}" == 'prod') ? '30' : '10',
+            ))
     }
     environment {
         AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')

@@ -74,12 +74,12 @@ pipeline {
         stage('Apply') {
             when {
                 expression {
-                    params.ACTION == ('apply' || 'destroy')
+                    params.ACTION ==~ /(apply|destroy)/
                 }
             }
             input {
                 message "Apply plan?"
-                ok "Done"
+                ok "Yes"
                 parameters {
                 choice(name: "APPLY", choices: ['Proceed', 'Abort'], description: "Proceed and apply tf plan, or abort")
                 }

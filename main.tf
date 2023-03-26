@@ -71,6 +71,11 @@ module "karpenter" {
 
 }
 
+module "karpenter_config" {
+  source = "./modules/karpenter-crd"
+  cluster_name = var.cluster_name
+}
+
 locals {
   tags = {
     Project = "k8s-practice"

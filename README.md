@@ -36,3 +36,12 @@ And apply:
 `terraform apply "dev_network-destroy.tfplan"`
 
 Nginx is a deployment to test Karpenter auto-scaling.
+
+Modules creation sequence:
+backend
+network
+eks
+node_group
+add_ons
+fargate_profile
+karpenter

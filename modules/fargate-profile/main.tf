@@ -46,7 +46,7 @@ resource "aws_eks_fargate_profile" "fargate_profile" {
 }
 
 # Create IAM policy for logging
-data "aws_iam_policy_document" "fargate_logging_policy" {
+data "aws_iam_policy_document" "fargate_logging_policy_json" {
   statement {
     sid = "FargateLoggingPolicy"
 
@@ -63,9 +63,14 @@ data "aws_iam_policy_document" "fargate_logging_policy" {
   }
 }
 
+resource "aws_iam_policy" "fargate_logging_policy" {
+  name        = "FargateLoggingPolicy"
+  policy      = data.aws_iam_policy_document.fargate_logging_policy_json.json
+}
+
 resource "aws_iam_role_policy_attachment" "fargate_logging_policy_attachment" {
   role       = aws_iam_role.fargate_role.name
-  policy_arn = data.aws_iam_policy_document.fargate_logging_policy
+  policy_arn = aws_iam_policy.fargate_logging_policy.arn
 }
 
 resource "aws_cloudwatch_log_group" "fargate_logging_cw_log_group" {

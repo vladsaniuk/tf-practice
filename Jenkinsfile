@@ -34,6 +34,11 @@ pipeline {
         }
 
         stage('Plan') {
+            when {
+                expression {
+                    params.ACTION != 'destroy'
+                }
+            }
             steps {
                 script {
                     if (params.TARGET != '') {

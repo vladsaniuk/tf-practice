@@ -116,7 +116,7 @@ YAML
 [OUTPUT]
     Name cloudwatch_logs
     Match   kube.*
-    region ${data.aws_region.current}
+    region ${data.aws_region.current.name}
     log_group_name ${aws_cloudwatch_log_group.fargate_logging_cw_log_group.name}
     log_stream_prefix from-fluent-bit-
     log_retention_days 5

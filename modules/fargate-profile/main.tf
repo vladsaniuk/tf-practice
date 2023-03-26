@@ -68,6 +68,13 @@ resource "aws_iam_role_policy_attachment" "fargate_logging_policy_attachment" {
   policy_arn = data.aws_iam_policy_document.fargate_logging_policy
 }
 
+resource "aws_cloudwatch_log_group" "fargate_logging_cw_log_group" {
+  name = "my-app-logs"
+  retention_in_days = 5
+
+  tags = var.tags
+}
+
 # Create namespace for Fargate logging
 resource "kubernetes_namespace" "aws-observability" {
   metadata {
@@ -85,8 +92,8 @@ resource "kubernetes_config_map_v1" "aws-logging" {
     namespace = kubernetes_namespace.aws-observability.metadata[0].name
   }
   data = {
-    flb_log_cw = "false"
-    filters.conf = <<YAML
+    flb_log_cw = "true"
+    "filters.conf" = <<YAML
 [FILTER]
     Name parser
     Match *
@@ -100,17 +107,17 @@ resource "kubernetes_config_map_v1" "aws-logging" {
     Buffer_Size 0
     Kube_Meta_Cache_TTL 300s
 YAML
-    output.conf = <<YAML
+    "output.conf" = <<YAML
 [OUTPUT]
     Name cloudwatch_logs
     Match   kube.*
     region ${data.aws_region.current}
-    log_group_name my-logs
+    log_group_name ${aws_cloudwatch_log_group.fargate_logging_cw_log_group.name}
     log_stream_prefix from-fluent-bit-
-    log_retention_days 60
+    log_retention_days 5
     auto_create_group true
 YAML
-    parsers.conf = <<YAML
+    "parsers.conf" = <<YAML
 [PARSER]
     Name crio
     Format Regex

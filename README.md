@@ -48,3 +48,5 @@ karpenter
 karpenter_config
 
 If Karpenter throws that CRDs already exists, you either import it into tfstate, or delete from cluster manually, prior to tf apply.
+
+Karpenter module deploys all required roles to aws-auth.

@@ -63,7 +63,7 @@ data "aws_iam_policy_document" "fargate_logging_policy" {
   }
 }
 
-resource "aws_iam_policy_attachment" "fargate_logging_policy_attachment" {
+resource "aws_iam_role_policy_attachment" "fargate_logging_policy_attachment" {
   role       = aws_iam_role.fargate_role.name
   policy_arn = data.aws_iam_policy_document.fargate_logging_policy
 }
@@ -72,7 +72,7 @@ resource "aws_iam_policy_attachment" "fargate_logging_policy_attachment" {
 resource "kubernetes_namespace" "aws-observability" {
   metadata {
     name = "aws-observability"
-    labels {
+    labels = {
       aws-observability = "enabled"
     }
   }

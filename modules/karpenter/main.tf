@@ -167,8 +167,14 @@ resource "kubernetes_config_map_v1_data" "aws-auth" {
 - groups:
   - system:bootstrappers
   - system:nodes
-  rolearn: arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/EKS-node-role-dev-env
+  rolearn: arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/EKS-node-role-${var.env}-env
   username: system:node:{{EC2PrivateDNSName}}
+- groups:
+  - system:bootstrappers
+  - system:nodes
+  - system:node-proxier
+  rolearn: arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/EKS-Fargate-role-${var.env}-env
+  username: system:node:{{SessionName}}
 YAML
     mapUsers = <<YAML
 - groups:

@@ -45,3 +45,6 @@ node_group
 add_ons
 fargate_profile
 karpenter
+karpenter_config
+
+If Karpenter throws that CRDs already exists, you either import it into tfstate, or delete from cluster manually, prior to tf apply.

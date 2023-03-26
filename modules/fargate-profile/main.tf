@@ -44,3 +44,79 @@ resource "aws_eks_fargate_profile" "fargate_profile" {
   subnet_ids = var.private_subnets_ids
   tags       = var.tags
 }
+
+# Create IAM policy for logging
+data "aws_iam_policy_document" "fargate_logging_policy" {
+  statement {
+    sid = "FargateLoggingPolicy"
+
+    actions = [
+      "logs:CreateLogStream",
+			"logs:CreateLogGroup",
+			"logs:DescribeLogStreams",
+			"logs:PutLogEvents"
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+}
+
+resource "aws_iam_policy_attachment" "fargate_logging_policy_attachment" {
+  role       = aws_iam_role.fargate_role.name
+  policy_arn = data.aws_iam_policy_document.fargate_logging_policy
+}
+
+# Create namespace for Fargate logging
+resource "kubernetes_namespace" "aws-observability" {
+  metadata {
+    name = "aws-observability"
+    labels {
+      aws-observability = "enabled"
+    }
+  }
+}
+
+# Create configmap with configuration for Fargate logging
+resource "kubernetes_config_map_v1" "aws-logging" {
+  metadata {
+    name      = "aws-logging"
+    namespace = kubernetes_namespace.aws-observability.metadata[0].name
+  }
+  data = {
+    flb_log_cw = "false"
+    filters.conf = <<YAML
+[FILTER]
+    Name parser
+    Match *
+    Key_name log
+    Parser crio
+[FILTER]
+    Name kubernetes
+    Match kube.*
+    Merge_Log On
+    Keep_Log Off
+    Buffer_Size 0
+    Kube_Meta_Cache_TTL 300s
+YAML
+    output.conf = <<YAML
+[OUTPUT]
+    Name cloudwatch_logs
+    Match   kube.*
+    region ${data.aws_region.current}
+    log_group_name my-logs
+    log_stream_prefix from-fluent-bit-
+    log_retention_days 60
+    auto_create_group true
+YAML
+    parsers.conf = <<YAML
+[PARSER]
+    Name crio
+    Format Regex
+    Regex ^(?<time>[^ ]+) (?<stream>stdout|stderr) (?<logtag>P|F) (?<log>.*)$
+    Time_Key    time
+    Time_Format %Y-%m-%dT%H:%M:%S.%L%z
+YAML
+  }
+}

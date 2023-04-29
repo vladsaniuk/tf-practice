@@ -27,3 +27,8 @@ provider "helm" {
     token                  = data.aws_eks_cluster_auth.eks.token
   }
 }
+
+provider "local" {
+  source = "hashicorp/local"
+  version = "2.4.0"
+}

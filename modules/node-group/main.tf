@@ -54,26 +54,26 @@ resource "aws_eks_node_group" "node_group" {
   ]
 }
 
-# Add users to cluster
-resource "kubernetes_config_map_v1_data" "aws-auth" {
-  for_each = { # for_each with list of objects
-    for index, user in var.cluster_users:
-    user.ARN => user
-  }
-  metadata {
-    name      = "aws-auth"
-    namespace = "kube-system"
-  }
-  data = {
-    mapUsers = <<YAML
-- groups:
-  - system:masters
-  userarn: ${each.value.ARN}
-  username: ${each.value.username}
-YAML
-  }
-  force = true
-  depends_on = [
-    aws_eks_node_group.node_group
-  ]
-}
+# # Add users to cluster
+# resource "kubernetes_config_map_v1_data" "aws-auth" {
+#   for_each = { # for_each with list of objects
+#     for index, user in var.cluster_users:
+#     user.ARN => user
+#   }
+#   metadata {
+#     name      = "aws-auth"
+#     namespace = "kube-system"
+#   }
+#   data = {
+#     mapUsers = <<YAML
+# - groups:
+#   - system:masters
+#   userarn: ${each.value.ARN}
+#   username: ${each.value.username}
+# YAML
+#   }
+#   force = true
+#   depends_on = [
+#     aws_eks_node_group.node_group
+#   ]
+# }

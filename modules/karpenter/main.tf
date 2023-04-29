@@ -146,7 +146,6 @@ resource "aws_iam_policy_attachment" "karpenter_controller_policy_to_role" {
   policy_arn = aws_iam_policy.karpenter_controller_policy.arn
 }
 
-# FIX LATER
 # Add configuration to EKS aws-auth configmap
 resource "kubernetes_config_map_v1_data" "aws-auth" {
   for_each = { # for_each with list of objects
@@ -193,6 +192,25 @@ resource "kubernetes_namespace" "karpenter_namespace" {
   }
 }
 
+resource "local_file" "karpenter_provisioner" {
+  content  = <<EOT
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: karpenter.sh/provisioner-name
+          operator: DoesNotExist
+      - matchExpressions:
+        - key: eks.amazonaws.com/nodegroup
+          operator: In
+          values:
+          - node-group-dev-${var.env}
+EOT
+
+  filename = "./modules/karpenter/karpenter_node_affinity_values-${var.env}.yaml"
+}
+
 # Install Karpenter with Helm
 resource "helm_release" "karpenter" {
   name       = "karpenter"
@@ -202,7 +220,7 @@ resource "helm_release" "karpenter" {
   version    = "v0.25.0"
 
   values = [
-    "${file("./modules/karpenter/karpenter_node_affinity_values.yaml")}"
+    "${file("./modules/karpenter/karpenter_node_affinity_values-${var.env}.yaml")}"
   ]
 
   set {
@@ -244,6 +262,10 @@ resource "helm_release" "karpenter" {
     name = ".template.spec.containers.readinessProbe.initialDelaySeconds"
     value = "30"
   }
+
+  depends_on = [
+    local_file.karpenter_provisioner
+  ]
 }
 
 # Add CRD 

@@ -213,7 +213,7 @@ resource "helm_release" "karpenter" {
             - key: eks.amazonaws.com/nodegroup
               operator: In
               values:
-              - node-group-dev-env
+              - node-group-${var.env}-env
     EOT
   ]
 

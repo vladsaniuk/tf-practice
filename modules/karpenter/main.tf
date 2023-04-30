@@ -205,7 +205,7 @@ affinity:
         - key: eks.amazonaws.com/nodegroup
           operator: In
           values:
-          - node-group-dev-${var.env}
+          - node-group-${var.env}
 EOT
 
   filename = "./modules/karpenter/karpenter_node_affinity_values-${var.env}.yaml"

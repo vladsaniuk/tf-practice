@@ -192,25 +192,6 @@ resource "kubernetes_namespace" "karpenter_namespace" {
   }
 }
 
-resource "local_file" "karpenter_provisioner" {
-  content  = <<EOT
-affinity:
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: karpenter.sh/provisioner-name
-          operator: DoesNotExist
-      - matchExpressions:
-        - key: eks.amazonaws.com/nodegroup
-          operator: In
-          values:
-          - node-group-${var.env}
-EOT
-
-  filename = "./modules/karpenter/karpenter_node_affinity_values-${var.env}.yaml"
-}
-
 # Install Karpenter with Helm
 resource "helm_release" "karpenter" {
   name       = "karpenter"
@@ -220,8 +201,20 @@ resource "helm_release" "karpenter" {
   version    = "v0.25.0"
 
   values = [
-    # "${file("./modules/karpenter/karpenter_node_affinity_values-${var.env}.yaml")}"
-    local_file.karpenter_provisioner.filename
+    <<-EOT
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: karpenter.sh/provisioner-name
+              operator: DoesNotExist
+          - matchExpressions:
+            - key: eks.amazonaws.com/nodegroup
+              operator: In
+              values:
+              - node-group-dev-env
+    EOT
   ]
 
   set {
@@ -263,10 +256,6 @@ resource "helm_release" "karpenter" {
     name = ".template.spec.containers.readinessProbe.initialDelaySeconds"
     value = "30"
   }
-
-  depends_on = [
-    local_file.karpenter_provisioner
-  ]
 }
 
 # Add CRD 

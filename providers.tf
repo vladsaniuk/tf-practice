@@ -1,5 +1,11 @@
 terraform {
   backend "s3" {}
+  required_providers  {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 4.65.0"
+    }
+  }
 }
 
 data "aws_eks_cluster" "eks" {
@@ -27,5 +33,3 @@ provider "helm" {
     token                  = data.aws_eks_cluster_auth.eks.token
   }
 }
-
-provider "local" {}

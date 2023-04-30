@@ -85,9 +85,6 @@ pipeline {
             input {
                 message 'Apply plan?'
                 ok 'Yes'
-                // parameters {
-                //     choice(name: 'APPLY', choices: ['Proceed', 'Abort'], description: 'Proceed and apply tf plan, or abort')
-                // }
             }
             steps {
                 sh """

@@ -220,7 +220,7 @@ resource "helm_release" "karpenter" {
   version    = "v0.25.0"
 
   values = [
-    "${file("./modules/karpenter/karpenter_node_affinity_values-${var.env}.yaml")}"
+    "${file(local_file.karpenter_provisioner.filename)}"
   ]
 
   set {

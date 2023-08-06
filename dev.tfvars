@@ -21,3 +21,5 @@ instance_types = ["t3.medium"]
 desired_size   = 1
 max_size       = 2
 min_size       = 1
+
+secrets = ["mysql_root_password", "mysql_password", "mysql_replication_password"]

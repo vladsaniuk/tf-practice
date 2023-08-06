@@ -74,6 +74,19 @@ module "karpenter" {
 module "karpenter_config" {
   source = "./modules/karpenter-crd"
   cluster_name = var.cluster_name
+
+  depends_on = [
+    module.karpenter
+  ]
+}
+
+module "secrets" {
+  for_each = toset(var.secrets)
+  source = "./modules/secrets"
+  name = each.key
+  # name = for secret_name in var.secret: secret_name
+  env          = var.env
+  tags         = local.tags
 }
 
 locals {

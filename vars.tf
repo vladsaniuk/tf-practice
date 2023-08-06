@@ -64,3 +64,8 @@ variable "cluster_users" {
     username = string
   }))
 }
+
+variable "secrets" {
+  description = "List of secret names to create"
+  default = []
+}

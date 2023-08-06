@@ -38,16 +38,14 @@ And apply:
 Nginx is a deployment to test Karpenter auto-scaling.
 
 Modules creation sequence:
-backend
-network
-eks
-node_group
-add_ons
-fargate_profile
-karpenter
-karpenter_config
-secrets
-
-If Karpenter throws that CRDs already exists, you either import it into tfstate, or delete from cluster manually, prior to tf apply.
+* backend
+* network
+* eks
+* node_group
+* add_ons
+* fargate_profile
+* karpenter
+* karpenter_config
+* secrets (will only create objects in SSM Parameters Store with dummy values)
 
 Karpenter module deploys all required roles to aws-auth.

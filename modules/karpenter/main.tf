@@ -258,18 +258,18 @@ resource "helm_release" "karpenter" {
   }
 }
 
-# Add CRD 
-resource "kubernetes_manifest" "sh_provisioners" {
-  manifest = yamldecode(file("./modules/karpenter/sh_provisioners.yaml"))
-  depends_on = [
-    helm_release.karpenter
-  ]
-}
+# # Add CRD 
+# resource "kubernetes_manifest" "sh_provisioners" {
+#   manifest = yamldecode(file("./modules/karpenter/sh_provisioners.yaml"))
+#   depends_on = [
+#     helm_release.karpenter
+#   ]
+# }
 
-# Add CRD
-resource "kubernetes_manifest" "aws_awsnodetemplates" {
-  manifest = yamldecode(file("./modules/karpenter/aws_awsnodetemplates.yaml"))
-    depends_on = [
-    helm_release.karpenter
-  ]
-}
+# # Add CRD
+# resource "kubernetes_manifest" "aws_awsnodetemplates" {
+#   manifest = yamldecode(file("./modules/karpenter/aws_awsnodetemplates.yaml"))
+#     depends_on = [
+#     helm_release.karpenter
+#   ]
+# }

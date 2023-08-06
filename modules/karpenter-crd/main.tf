@@ -40,6 +40,8 @@ resource "kubernetes_manifest" "provisioner_default" {
           ]
         },
       ]
+      "ttlSecondsUntilExpired" = "2592000"
+      "ttlSecondsAfterEmpty" = "30"
     }
   }
 }
